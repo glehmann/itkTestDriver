@@ -58,258 +58,6 @@ void usage()
   std::cerr << "usage: itkTestDriver [options] prg [args]" << std::endl;
 }
 
-
-int main(int ac, char* av[] )
-{
-  std::vector< char* > args;
-  typedef std::pair< char *, char *> ComparePairType;
-  std::vector< ComparePairType > compareList;
-
-  // parse the command line
-  int i = 1;
-  bool skip = false;
-  while( i < ac )
-    {
-    if( !skip && strcmp(av[i], "--append-libpath") == 0 )
-      {
-      if( i+1 >= ac )
-        {
-        usage();
-        return 1;
-        }
-      std::string libpath = av[i+1];
-      char * oldenv = getenv(KWSYS_SHARED_FORWARD_LDPATH);
-      if( oldenv )
-        {
-        libpath += KWSYS_SHARED_FORWARD_PATH_SEP;
-        libpath += oldenv;
-        }
-      setenv(KWSYS_SHARED_FORWARD_LDPATH, libpath.c_str(), true);
-      i += 2;
-      }
-/*    else if( strcmp(av[i], "--append-path") == 0 )
-      {
-      if( i+2 <= ac )
-        {
-        usage();
-        return 1;
-        }
-      std::string path = av[i+1];
-      char * oldenv = getenv("PATH");
-      if( oldenv )
-        {
-        path += KWSYS_SHARED_FORWARD_PATH_SEP;
-        path += oldenv;
-        }
-      setenv("PATH", path.c_str(), true);
-      i += 2;
-      }*/
-    else if( !skip && strcmp(av[i], "--append-env") == 0 )
-      {
-      if( i+2 >= ac )
-        {
-        usage();
-        return 1;
-        }
-      std::string env = av[i+2];
-      char * oldenv = getenv(av[i+1]);
-      if( oldenv )
-        {
-        env += KWSYS_SHARED_FORWARD_PATH_SEP;
-        env += oldenv;
-        }
-      setenv(av[i+1], env.c_str(), true);
-      i += 3;
-      }
-    else if( !skip && strcmp(av[i], "--compare") == 0 )
-      {
-      if( i+2 >= ac )
-        {
-        usage();
-        return 1;
-        }
-      compareList.push_back( ComparePairType( av[i+1], av[i+2] ) );
-      i += 3;
-      }
-    else if( !skip && strcmp(av[i], "--") == 0 )
-      {
-      skip = true;
-      i += 1;
-      }
-    else if( !skip && strcmp(av[i], "--help") == 0 )
-      {
-      usage();
-      return 0;
-      }
-    else 
-      {
-      args.push_back( av[i] );
-      i += 1;
-      }
-    }
-
-  if( args.empty() )
-    {
-    usage();
-    return 1;
-    }
-
-  // a NULL is required at the end of the table
-  char* argv[ args.size() + 1 ];
-  for( i=0; i<args.size(); i++ )
-    {
-    argv[ i ] = args[ i ];
-    }
-  argv[ args.size() ] = NULL;
-
-  itksysProcess * process = itksysProcess_New();
-  itksysProcess_SetCommand( process, argv );
-  itksysProcess_SetPipeShared( process, itksysProcess_Pipe_STDOUT, true);
-  itksysProcess_SetPipeShared( process, itksysProcess_Pipe_STDERR, true);
-  itksysProcess_Execute( process );
-  itksysProcess_WaitForExit( process, NULL );
-  int retCode = itksysProcess_GetExitValue( process );
-  if( retCode != 0 )
-    {
-    // no need to compare the images: the test has failed
-    return retCode;
-    }
-
-
-  for( i=0; i<compareList.size(); i++)
-    {
-    const char * testFilename = compareList[i].first;
-    const char * baselineFilename = compareList[i].first;
-    std::cout << "testFilename: " << testFilename << "  baselineFilename: " << baselineFilename << std::endl;
-    }
-
-/*
-
-
-
-
-
-
-
-
-  if(ac < 2)
-    {
-    PrintAvailableTests();
-    std::cout << "To run a test, enter the test number: ";
-    int testNum = 0;
-    std::cin >> testNum;
-    std::map<std::string, MainFuncPointer>::iterator j = StringToTestFunctionMap.begin();
-    int i = 0;
-    while(j != StringToTestFunctionMap.end() && i < testNum)
-      {
-      ++i;
-      ++j;
-      }
-    if(j == StringToTestFunctionMap.end())
-      {
-      std::cerr << testNum << " is an invalid test number\n";
-      return -1;
-      }
-    testToRun = j->first;
-    }
-  else
-    {
-    if (strcmp(av[1], "--with-threads") == 0)
-      {
-      int numThreads = atoi(av[2]);
-      itk::MultiThreader::SetGlobalDefaultNumberOfThreads(numThreads);
-      av += 2;
-      ac -= 2;
-      }
-    else if (strcmp(av[1], "--without-threads") == 0)
-      {
-      itk::MultiThreader::SetGlobalDefaultNumberOfThreads(1);
-      av += 1;
-      ac -= 1;
-      }
-    if (strcmp(av[1], "--compare") == 0)
-      {
-      baselineFilename = av[2];
-      testFilename = av[3];
-      av += 3;
-      ac -= 3;
-      }
-    testToRun = av[1];
-    }
-  std::map<std::string, MainFuncPointer>::iterator j = StringToTestFunctionMap.find(testToRun);
-  if(j != StringToTestFunctionMap.end())
-    {
-    MainFuncPointer f = j->second;
-    int result;
-    try
-      {
-      // Invoke the test's "main" function.
-      result = (*f)(ac-1, av+1);
-
-      // Make a list of possible baselines
-      if (baselineFilename && testFilename)
-        {
-        std::map<std::string,int> baselines = RegressionTestBaselines(baselineFilename);
-        std::map<std::string,int>::iterator baseline = baselines.begin();
-        std::string bestBaseline;
-        int bestBaselineStatus = itk::NumericTraits<int>::max();
-        while (baseline != baselines.end())
-          {
-          baseline->second = RegressionTestImage(testFilename,
-                                                 (baseline->first).c_str(),
-                                                 0);
-          if (baseline->second < bestBaselineStatus)
-            {
-            bestBaseline = baseline->first;
-            bestBaselineStatus = baseline->second;
-            }
-          if (baseline->second == 0)
-            {
-            break;
-            }
-          ++baseline;
-          }
-        // if the best we can do still has errors, generate the error images
-        if (bestBaselineStatus)
-          {
-          baseline->second = RegressionTestImage(testFilename,
-                                                 bestBaseline.c_str(),
-                                                 1);
-          }
-
-        // output the matching baseline
-        std::cout << "<DartMeasurement name=\"BaselineImageName\" type=\"text/string\">";
-        std::cout << itksys::SystemTools::GetFilenameName(bestBaseline);
-        std::cout << "</DartMeasurement>" << std::endl;
-        
-        result += bestBaselineStatus;
-        }
-      }
-    catch(const itk::ExceptionObject& e)
-      {
-      std::cerr << "ITK test driver caught an ITK exception:\n";
-      std::cerr << e.GetFile() << ":" << e.GetLine() << ":\n"
-                << e.GetDescription() << "\n";
-      result = -1;
-      }
-    catch(const std::exception& e)
-      {
-      std::cerr << "ITK test driver caught an exception:\n";
-      std::cerr << e.what() << "\n";
-      result = -1;
-      }
-    catch(...)
-      {
-      std::cerr << "ITK test driver caught an unknown exception!!!\n";
-      result = -1;
-      }
-    return result;
-    }
-  PrintAvailableTests();
-  std::cerr << "Failed: " << testToRun << ": No test registered with name " << testToRun << "\n";
-  return -1;
-}
-
 // Regression Testing Code
 
 int RegressionTestImage (const char *testImageFilename, const char *baselineImageFilename, int reportErrors)
@@ -487,9 +235,7 @@ int RegressionTestImage (const char *testImageFilename, const char *baselineImag
 
 
     }
-  return (status != 0) ? 1 : 0;*/
-
-return 0;
+  return (status != 0) ? 1 : 0;
 }
 
 //
@@ -529,3 +275,195 @@ std::map<std::string,int> RegressionTestBaselines (char *baselineFilename)
     }
   return baselines;
 }
+
+int main(int ac, char* av[] )
+{
+  std::vector< char* > args;
+  typedef std::pair< char *, char *> ComparePairType;
+  std::vector< ComparePairType > compareList;
+
+  // parse the command line
+  int i = 1;
+  bool skip = false;
+  while( i < ac )
+    {
+    if( !skip && strcmp(av[i], "--append-libpath") == 0 )
+      {
+      if( i+1 >= ac )
+        {
+        usage();
+        return 1;
+        }
+      std::string libpath = av[i+1];
+      char * oldenv = getenv(KWSYS_SHARED_FORWARD_LDPATH);
+      if( oldenv )
+        {
+        libpath += KWSYS_SHARED_FORWARD_PATH_SEP;
+        libpath += oldenv;
+        }
+      setenv(KWSYS_SHARED_FORWARD_LDPATH, libpath.c_str(), true);
+      i += 2;
+      }
+/*    else if( strcmp(av[i], "--append-path") == 0 )
+      {
+      if( i+2 <= ac )
+        {
+        usage();
+        return 1;
+        }
+      std::string path = av[i+1];
+      char * oldenv = getenv("PATH");
+      if( oldenv )
+        {
+        path += KWSYS_SHARED_FORWARD_PATH_SEP;
+        path += oldenv;
+        }
+      setenv("PATH", path.c_str(), true);
+      i += 2;
+      }*/
+    else if( !skip && strcmp(av[i], "--append-env") == 0 )
+      {
+      if( i+2 >= ac )
+        {
+        usage();
+        return 1;
+        }
+      std::string env = av[i+2];
+      char * oldenv = getenv(av[i+1]);
+      if( oldenv )
+        {
+        env += KWSYS_SHARED_FORWARD_PATH_SEP;
+        env += oldenv;
+        }
+      setenv(av[i+1], env.c_str(), true);
+      i += 3;
+      }
+    else if( !skip && strcmp(av[i], "--compare") == 0 )
+      {
+      if( i+2 >= ac )
+        {
+        usage();
+        return 1;
+        }
+      compareList.push_back( ComparePairType( av[i+1], av[i+2] ) );
+      i += 3;
+      }
+    else if( !skip && strcmp(av[i], "--") == 0 )
+      {
+      skip = true;
+      i += 1;
+      }
+    else if( !skip && strcmp(av[i], "--help") == 0 )
+      {
+      usage();
+      return 0;
+      }
+    else 
+      {
+      args.push_back( av[i] );
+      i += 1;
+      }
+    }
+
+  if( args.empty() )
+    {
+    usage();
+    return 1;
+    }
+
+  // a NULL is required at the end of the table
+  char* argv[ args.size() + 1 ];
+  for( i=0; i<args.size(); i++ )
+    {
+    argv[ i ] = args[ i ];
+    }
+  argv[ args.size() ] = NULL;
+
+  itksysProcess * process = itksysProcess_New();
+  itksysProcess_SetCommand( process, argv );
+  itksysProcess_SetPipeShared( process, itksysProcess_Pipe_STDOUT, true);
+  itksysProcess_SetPipeShared( process, itksysProcess_Pipe_STDERR, true);
+  itksysProcess_Execute( process );
+  itksysProcess_WaitForExit( process, NULL );
+  int retCode = itksysProcess_GetExitValue( process );
+  if( retCode != 0 )
+    {
+    // no need to compare the images: the test has failed
+    return retCode;
+    }
+
+  // now compare the images
+  for( i=0; i<compareList.size(); i++)
+    {
+    char * testFilename = compareList[i].first;
+    char * baselineFilename = compareList[i].second;
+    std::cout << "testFilename: " << testFilename << "  baselineFilename: " << baselineFilename << std::endl;
+
+    // Make a list of possible baselines
+    std::map<std::string,int> baselines = RegressionTestBaselines(baselineFilename);
+    std::map<std::string,int>::iterator baseline = baselines.begin();
+    std::string bestBaseline;
+    int bestBaselineStatus = itk::NumericTraits<int>::max();
+    while (baseline != baselines.end())
+      {
+      baseline->second = RegressionTestImage(testFilename,
+                                             (baseline->first).c_str(),
+                                             0);
+      if (baseline->second < bestBaselineStatus)
+        {
+        bestBaseline = baseline->first;
+        bestBaselineStatus = baseline->second;
+        }
+      if (baseline->second == 0)
+        {
+        break;
+        }
+      ++baseline;
+      }
+    // if the best we can do still has errors, generate the error images
+    if (bestBaselineStatus)
+      {
+      baseline->second = RegressionTestImage(testFilename,
+                                            bestBaseline.c_str(),
+                                             1);
+      }
+
+    // output the matching baseline
+    std::cout << "<DartMeasurement name=\"BaselineImageName\" type=\"text/string\">";
+    std::cout << itksys::SystemTools::GetFilenameName(bestBaseline);
+    std::cout << "</DartMeasurement>" << std::endl;
+    
+    if( bestBaselineStatus != 0 )
+      {
+      return bestBaselineStatus;
+      }
+    }
+    
+/*    
+    }
+    catch(const itk::ExceptionObject& e)
+      {
+      std::cerr << "ITK test driver caught an ITK exception:\n";
+      std::cerr << e.GetFile() << ":" << e.GetLine() << ":\n"
+                << e.GetDescription() << "\n";
+      result = -1;
+      }
+    catch(const std::exception& e)
+      {
+      std::cerr << "ITK test driver caught an exception:\n";
+      std::cerr << e.what() << "\n";
+      result = -1;
+      }
+    catch(...)
+      {
+      std::cerr << "ITK test driver caught an unknown exception!!!\n";
+      result = -1;
+      }
+    return result;
+    }
+*/
+
+
+  return 0;
+}
+

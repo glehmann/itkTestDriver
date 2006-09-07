@@ -30,7 +30,6 @@ ENDFOREACH(Package)
 #examples: ITKCommon, VTKRendering, etc
 SET(Libraries
   ITKCommon
-  ITKBasicFilters
   ITKIO
 )
 
