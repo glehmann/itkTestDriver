@@ -393,76 +393,72 @@ int main(int ac, char* av[] )
     }
 
   // now compare the images
-  for( i=0; i<compareList.size(); i++)
+  try {
+    for( i=0; i<compareList.size(); i++)
+      {
+      char * testFilename = compareList[i].first;
+      char * baselineFilename = compareList[i].second;
+      std::cout << "testFilename: " << testFilename << "  baselineFilename: " << baselineFilename << std::endl;
+
+      // Make a list of possible baselines
+      std::map<std::string,int> baselines = RegressionTestBaselines(baselineFilename);
+      std::map<std::string,int>::iterator baseline = baselines.begin();
+      std::string bestBaseline;
+      int bestBaselineStatus = itk::NumericTraits<int>::max();
+      while (baseline != baselines.end())
+        {
+        baseline->second = RegressionTestImage(testFilename,
+                                               (baseline->first).c_str(),
+                                               0);
+        if (baseline->second < bestBaselineStatus)
+          {
+          bestBaseline = baseline->first;
+          bestBaselineStatus = baseline->second;
+          }
+        if (baseline->second == 0)
+          {
+          break;
+          }
+        ++baseline;
+        }
+      // if the best we can do still has errors, generate the error images
+      if (bestBaselineStatus)
+        {
+        baseline->second = RegressionTestImage(testFilename,
+                                              bestBaseline.c_str(),
+                                               1);
+        }
+
+      // output the matching baseline
+      std::cout << "<DartMeasurement name=\"BaselineImageName\" type=\"text/string\">";
+      std::cout << itksys::SystemTools::GetFilenameName(bestBaseline);
+      std::cout << "</DartMeasurement>" << std::endl;
+    
+      if( bestBaselineStatus != 0 )
+        {
+        return bestBaselineStatus;
+        }
+      }
+
+    }
+  catch(const itk::ExceptionObject& e)
     {
-    char * testFilename = compareList[i].first;
-    char * baselineFilename = compareList[i].second;
-    std::cout << "testFilename: " << testFilename << "  baselineFilename: " << baselineFilename << std::endl;
-
-    // Make a list of possible baselines
-    std::map<std::string,int> baselines = RegressionTestBaselines(baselineFilename);
-    std::map<std::string,int>::iterator baseline = baselines.begin();
-    std::string bestBaseline;
-    int bestBaselineStatus = itk::NumericTraits<int>::max();
-    while (baseline != baselines.end())
-      {
-      baseline->second = RegressionTestImage(testFilename,
-                                             (baseline->first).c_str(),
-                                             0);
-      if (baseline->second < bestBaselineStatus)
-        {
-        bestBaseline = baseline->first;
-        bestBaselineStatus = baseline->second;
-        }
-      if (baseline->second == 0)
-        {
-        break;
-        }
-      ++baseline;
-      }
-    // if the best we can do still has errors, generate the error images
-    if (bestBaselineStatus)
-      {
-      baseline->second = RegressionTestImage(testFilename,
-                                            bestBaseline.c_str(),
-                                             1);
-      }
-
-    // output the matching baseline
-    std::cout << "<DartMeasurement name=\"BaselineImageName\" type=\"text/string\">";
-    std::cout << itksys::SystemTools::GetFilenameName(bestBaseline);
-    std::cout << "</DartMeasurement>" << std::endl;
-    
-    if( bestBaselineStatus != 0 )
-      {
-      return bestBaselineStatus;
-      }
+    std::cerr << "ITK test driver caught an ITK exception:\n";
+    std::cerr << e.GetFile() << ":" << e.GetLine() << ":\n"
+              << e.GetDescription() << "\n";
+    return -1;
     }
-    
-/*    
+  catch(const std::exception& e)
+    {
+    std::cerr << "ITK test driver caught an exception:\n";
+    std::cerr << e.what() << "\n";
+    return -1;
     }
-    catch(const itk::ExceptionObject& e)
-      {
-      std::cerr << "ITK test driver caught an ITK exception:\n";
-      std::cerr << e.GetFile() << ":" << e.GetLine() << ":\n"
-                << e.GetDescription() << "\n";
-      result = -1;
-      }
-    catch(const std::exception& e)
-      {
-      std::cerr << "ITK test driver caught an exception:\n";
-      std::cerr << e.what() << "\n";
-      result = -1;
-      }
-    catch(...)
-      {
-      std::cerr << "ITK test driver caught an unknown exception!!!\n";
-      result = -1;
-      }
-    return result;
+  catch(...)
+    {
+    std::cerr << "ITK test driver caught an unknown exception!!!\n";
+    return -1;
     }
-*/
-
 
   return 0;
 }
