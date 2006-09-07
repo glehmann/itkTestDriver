@@ -61,12 +61,12 @@ void usage()
   std::cerr << "produced." << std::endl;
   std::cerr << std::endl;
   std::cerr << "Options:" << std::endl;
-  std::cerr << "  --append-libpath PATH" << std::endl;
+  std::cerr << "  --add-before-libpath PATH" << std::endl;
   std::cerr << "      Add a path to the library path environment. This option take care of" << std::endl;
   std::cerr << "      choosing the right environment variable for your system." << std::endl;
   std::cerr << "      This option can be used several times." << std::endl;
   std::cerr << std::endl;
-  std::cerr << "  --append-env NAME VALUE" << std::endl;
+  std::cerr << "  --add-before-env NAME VALUE" << std::endl;
   std::cerr << "      Add a VALUE to the variable name in the environment." << std::endl;
   std::cerr << "      choosing the right environment variable for your system." << std::endl;
   std::cerr << "      This option can be used several times." << std::endl;
@@ -314,7 +314,7 @@ int main(int ac, char* av[] )
   bool skip = false;
   while( i < ac )
     {
-    if( !skip && strcmp(av[i], "--append-libpath") == 0 )
+    if( !skip && strcmp(av[i], "--add-before-libpath") == 0 )
       {
       if( i+1 >= ac )
         {
@@ -331,7 +331,7 @@ int main(int ac, char* av[] )
       setenv(KWSYS_SHARED_FORWARD_LDPATH, libpath.c_str(), true);
       i += 2;
       }
-/*    else if( strcmp(av[i], "--append-path") == 0 )
+/*    else if( strcmp(av[i], "--add-before-path") == 0 )
       {
       if( i+2 <= ac )
         {
@@ -348,7 +348,7 @@ int main(int ac, char* av[] )
       setenv("PATH", path.c_str(), true);
       i += 2;
       }*/
-    else if( !skip && strcmp(av[i], "--append-env") == 0 )
+    else if( !skip && strcmp(av[i], "--add-before-env") == 0 )
       {
       if( i+2 >= ac )
         {
