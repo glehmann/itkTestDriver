@@ -56,6 +56,33 @@
 void usage()
 {
   std::cerr << "usage: itkTestDriver [options] prg [args]" << std::endl;
+  std::cerr << std::endl;
+  std::cerr << "itkTestDriver alter the environment, run a test program and compare the images" << std::endl;
+  std::cerr << "produced." << std::endl;
+  std::cerr << std::endl;
+  std::cerr << "Options:" << std::endl;
+  std::cerr << "  --append-libpath PATH" << std::endl;
+  std::cerr << "      Add a path to the library path environment. This option take care of" << std::endl;
+  std::cerr << "      choosing the right environment variable for your system." << std::endl;
+  std::cerr << "      This option can be used several times." << std::endl;
+  std::cerr << std::endl;
+  std::cerr << "  --append-env NAME VALUE" << std::endl;
+  std::cerr << "      Add a VALUE to the variable name in the environment." << std::endl;
+  std::cerr << "      choosing the right environment variable for your system." << std::endl;
+  std::cerr << "      This option can be used several times." << std::endl;
+  std::cerr << std::endl;
+  std::cerr << "  --compare TEST BASELINE" << std::endl;
+  std::cerr << "      Compare the TEST image to the BASELINE one." << std::endl;
+  std::cerr << "      This option can be used several times." << std::endl;
+  std::cerr << std::endl;
+  std::cerr << "  --" << std::endl;
+  std::cerr << "      The options after -- are not interpreted by this program and passed" << std::endl;
+  std::cerr << "      directly to the test program." << std::endl;
+  std::cerr << std::endl;
+  std::cerr << "  --help" << std::endl;
+  std::cerr << "      Display this message and exit." << std::endl;
+  std::cerr << std::endl;
+ 
 }
 
 // Regression Testing Code
