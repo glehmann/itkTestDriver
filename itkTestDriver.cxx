@@ -68,7 +68,6 @@ void usage()
   std::cerr << std::endl;
   std::cerr << "  --add-before-env NAME VALUE" << std::endl;
   std::cerr << "      Add a VALUE to the variable name in the environment." << std::endl;
-  std::cerr << "      choosing the right environment variable for your system." << std::endl;
   std::cerr << "      This option can be used several times." << std::endl;
   std::cerr << std::endl;
   std::cerr << "  --compare TEST BASELINE" << std::endl;
