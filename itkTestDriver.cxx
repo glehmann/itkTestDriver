@@ -19,12 +19,7 @@
 
 =========================================================================*/
 
-// This file is used to create TestDriver executables
-// These executables are able to register a function pointer to a string name
-// in a lookup table.   By including this file, it creates a main function
-// that calls RegisterTests() then looks up the function pointer for the test
-// specified on the command line.
-
+// define some itksys* things to make ShareForward.h happy
 #define itksys_SHARED_FORWARD_DIR_BUILD ""
 #define itksys_SHARED_FORWARD_PATH_BUILD ""
 #define itksys_SHARED_FORWARD_PATH_INSTALL ""
@@ -48,6 +43,8 @@
 #include "itkDifferenceImageFilter.h"
 #include "itkImageRegion.h"
 #include "itksys/SystemTools.hxx"
+// include SharedForward to avoid duplicating the code which find the library path variable
+// name and the path separator
 #include "itksys/SharedForward.h"
 #include "itksys/Process.h"
 
