@@ -49,7 +49,7 @@
 #include "itkImageRegion.h"
 #include "itksys/SystemTools.hxx"
 #include "itksys/SharedForward.h"
-
+#include "itksys/Process.h"
 
 #define ITK_TEST_DIMENSION_MAX 6
 
@@ -162,16 +162,14 @@ int main(int ac, char* av[] )
     }
   argv[ args.size() ] = NULL;
 
-#if defined(_MSC_VER)
-  int retCode = _execvp( argv[0], argv );
-#else
-  int retCode = execvp( argv[0], argv );
-#endif
-  if( retCode != 0 )
-    {
-    // no need to compare the images: the test has failed
-    return retCode;
-    }
+  itksysProcess * process = itksysProcess_New();
+  itksysProcess_SetCommand( process, argv );
+  itksysProcess_WaitForExit( process, NULL );
+//   if( retCode != 0 )
+//     {
+//     // no need to compare the images: the test has failed
+//     return retCode;
+//     }
 
 
   for( i=0; i<compareList.size(); i++)
