@@ -164,12 +164,16 @@ int main(int ac, char* av[] )
 
   itksysProcess * process = itksysProcess_New();
   itksysProcess_SetCommand( process, argv );
+  itksysProcess_SetPipeShared( process, itksysProcess_Pipe_STDOUT, true);
+  itksysProcess_SetPipeShared( process, itksysProcess_Pipe_STDERR, true);
+  itksysProcess_Execute( process );
   itksysProcess_WaitForExit( process, NULL );
-//   if( retCode != 0 )
-//     {
-//     // no need to compare the images: the test has failed
-//     return retCode;
-//     }
+  int retCode = itksysProcess_GetExitValue( process );
+  if( retCode != 0 )
+    {
+    // no need to compare the images: the test has failed
+    return retCode;
+    }
 
 
   for( i=0; i<compareList.size(); i++)
